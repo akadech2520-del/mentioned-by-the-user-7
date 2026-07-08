@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ระบบขอ ก.พ.7 / ก.ค.ศ.16 Online</title>
+  <link rel="preconnect" href="https://img2.pic.in.th">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <section id="loginScreen" class="login-screen">
+    <div class="login-hero" aria-hidden="true">
+      <div class="hero-band"></div>
+      <div class="hero-grid"></div>
+    </div>
+
+    <main class="login-panel" aria-labelledby="systemTitle">
+      <div class="agency-mark">
+        <img id="loginLogo" alt="ตรา สพฐ." src="https://img2.pic.in.th/59207ffe19d7eed0bdb250a719a940f6.png">
+      </div>
+      <p class="eyebrow">กลุ่มบริหารงานบุคคล</p>
+      <h1 id="systemTitle">ระบบขอ ก.พ.7 / ก.ค.ศ.16 Online</h1>
+      <p class="agency-name">สำนักงานเขตพื้นที่การศึกษาประถมศึกษาสกลนคร เขต 2</p>
+
+      <div class="role-picker" role="tablist" aria-label="เลือกประเภทผู้ใช้งาน">
+        <button type="button" class="role-chip active" data-login-role="applicant">ผู้ขอเอกสาร</button>
+        <button type="button" class="role-chip" data-login-role="officer">เจ้าหน้าที่</button>
+        <button type="button" class="role-chip" data-login-role="admin">ผู้ดูแลระบบ</button>
+      </div>
+
+      <form id="loginForm" class="login-form">
+        <label>
+          Username
+          <input id="username" name="username" autocomplete="username" placeholder="เลขประชาชน 13 หลัก หรือชื่อผู้ใช้" required>
+        </label>
+        <label>
+          Password
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="วัน/เดือน/ปีเกิด เช่น 07/11/2520" required>
+        </label>
+        <button class="primary-action" type="submit">เข้าสู่ระบบ</button>
+      </form>
+
+      <div class="login-help">
+        <strong>บัญชีทดสอบ</strong>
+        <span>ผู้ขอ: U 1479912341234 / P 07/11/2520</span>
+        <span>เจ้าหน้าที่: officer / 1234</span>
+        <span>ผู้ดูแล: admin / admin</span>
+      </div>
+      <p class="support-text">เข้าสู่ระบบไม่ได้ โปรดติดต่อกลุ่มบริหารงานบุคคล โทร. 042-000-000 ต่อ 120</p>
+    </main>
+  </section>
+
+  <div id="appShell" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <img alt="ตรา สพฐ." src="https://img2.pic.in.th/59207ffe19d7eed0bdb250a719a940f6.png">
+        <div>
+          <strong>ก.พ.7 / ก.ค.ศ.16</strong>
+          <span>Online</span>
+        </div>
+      </div>
+      <nav id="mainNav" class="main-nav" aria-label="เมนูหลัก"></nav>
+      <div class="pdpa-note">
+        <strong>PDPA</strong>
+        <span>แสดงข้อมูลเท่าที่จำเป็นตามสิทธิ์ผู้ใช้งาน</span>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <button id="mobileMenuButton" class="icon-button menu-button" type="button" aria-label="เปิดเมนู">☰</button>
+        <div>
+          <p id="roleLabel" class="eyebrow"></p>
+          <h2 id="pageTitle">หน้าหลัก</h2>
+        </div>
+        <div class="topbar-actions">
+          <div id="userBadge" class="user-badge"></div>
+          <button id="logoutButton" class="secondary-action" type="button">ออกจากระบบ</button>
+        </div>
+      </header>
+
+      <section id="noticeArea" class="notice-area" aria-live="polite"></section>
+      <section id="content" class="content"></section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
