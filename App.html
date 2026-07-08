@@ -1,0 +1,1860 @@
+﻿<script>
+const LOGO_URL = "https://img2.pic.in.th/59207ffe19d7eed0bdb250a719a940f6.png";
+const STORAGE_KEY = "hrDocumentOnlineState";
+
+const roleMeta = {
+  applicant: {
+    label: "ผู้ขอเอกสาร",
+    title: "Dashboard ผู้ขอเอกสาร",
+    nav: [
+      ["home", "หน้าหลัก"],
+      ["new-request", "ยื่นคำขอใหม่"],
+      ["history", "ประวัติคำขอ"],
+      ["downloads", "ดาวน์โหลดเอกสาร"],
+      ["profile", "ข้อมูลส่วนตัว"]
+    ]
+  },
+  officer: {
+    label: "เจ้าหน้าที่กลุ่มบริหารงานบุคคล",
+    title: "Dashboard เจ้าหน้าที่",
+    nav: [
+      ["home", "หน้าหลัก"],
+      ["requests", "รายการคำขอ"],
+      ["calendar", "ปฏิทินนัดหมาย"],
+      ["upload", "อัปโหลดเอกสาร"],
+      ["certify", "รับรองสำเนาถูกต้อง"],
+      ["delivery", "ประวัติการจัดส่ง"],
+      ["reports", "รายงานเบื้องต้น"]
+    ]
+  },
+  admin: {
+    label: "ผู้ดูแลระบบ",
+    title: "Dashboard ผู้ดูแลระบบ",
+    nav: [
+      ["home", "หน้าหลัก"],
+      ["all-requests", "รายการคำขอทั้งหมด"],
+      ["personnel", "ข้อมูลบุคลากร"],
+      ["users", "จัดการผู้ใช้งาน"],
+      ["reports", "รายงาน"],
+      ["settings", "ตั้งค่าระบบ"],
+      ["logs", "ประวัติการใช้งาน"]
+    ]
+  }
+};
+
+const statuses = [
+  "รอเจ้าหน้าที่ตรวจสอบ",
+  "รับคำขอแล้ว",
+  "อยู่ระหว่างดำเนินการ",
+  "นัดหมายรับเอกสารแล้ว",
+  "จัดส่งเอกสารแล้ว",
+  "ขอข้อมูลเพิ่มเติม",
+  "ยกเลิกคำขอ"
+];
+
+const documentTypes = [
+  "ขอสำเนา ก.พ.7",
+  "ขอสำเนา ก.ค.ศ.16",
+  "ขอทั้ง ก.พ.7 และ ก.ค.ศ.16"
+];
+
+const GOOGLE_CONFIG = {
+  sheetId: "13n595E2MEwZfeg0rOL0f61JPsVCAwNhkiAT8YqIKzmc",
+  scriptUrl: "https://script.google.com/macros/s/AKfycbzB0IrhANe67al2P4h-P-0JkCY2VTpEOagKU-knHqK-BWoEhFN8WhLyduXyQVFYA7z49A/exec",
+  driveFolderId: "1kz-st8yztlN2yTjYZxdW6vf1J7pDbvu5",
+  driveFolderUrl: "https://drive.google.com/drive/folders/1kz-st8yztlN2yTjYZxdW6vf1J7pDbvu5?usp=sharing"
+};
+
+const deliveryMethods = ["รับเอง"];
+
+const demoUsers = [
+  { userId: "u-applicant", username: "1479912341234", password: "07/11/2520", role: "applicant", personId: "p1", status: "active" },
+  { userId: "u-officer", username: "officer", password: "1234", role: "officer", personId: "p2", status: "active" },
+  { userId: "u-admin", username: "admin", password: "admin", role: "admin", personId: "p3", status: "active" }
+];
+
+const defaultState = {
+  serial: 4,
+  users: demoUsers,
+  personnel: [
+    {
+      personId: "p1",
+      prefix: "นางสาว",
+      fullName: "อารีย์ ใจดี",
+      position: "ครู",
+      academicRank: "ชำนาญการพิเศษ",
+      schoolName: "โรงเรียนบ้านหนองแสง",
+      positionNumber: "สก 2145",
+      directPaymentNumber: "DP-108822",
+      nationalId: "1479912341234",
+      birthDate: "1977-11-07",
+      phone: "089-456-7890",
+      email: "aree.teacher@example.go.th",
+      workStatus: "ปฏิบัติงานอยู่",
+      note: "ติดต่อสะดวกช่วง 09.00-16.00 น."
+    },
+    {
+      personId: "p2",
+      prefix: "นาย",
+      fullName: "ธนกร ศรีสกล",
+      position: "นักทรัพยากรบุคคล",
+      academicRank: "-",
+      schoolName: "สพป.สกลนคร เขต 2",
+      positionNumber: "HR 022",
+      directPaymentNumber: "DP-445201",
+      nationalId: "1111100009999",
+      birthDate: "1989-06-12",
+      phone: "042-000-000",
+      email: "hr.officer@example.go.th",
+      workStatus: "ปฏิบัติงานอยู่",
+      note: ""
+    },
+    {
+      personId: "p3",
+      prefix: "นาง",
+      fullName: "มณีรัตน์ ผู้ดูแลระบบ",
+      position: "ผู้อำนวยการกลุ่ม",
+      academicRank: "-",
+      schoolName: "สพป.สกลนคร เขต 2",
+      positionNumber: "ADM 001",
+      directPaymentNumber: "DP-990002",
+      nationalId: "2222233334444",
+      birthDate: "1975-04-20",
+      phone: "042-000-001",
+      email: "admin@example.go.th",
+      workStatus: "ปฏิบัติงานอยู่",
+      note: ""
+    }
+  ],
+  requests: [
+    {
+      requestId: "r1",
+      requestCode: "HR-2569-0001",
+      personId: "p1",
+      documentType: "ขอสำเนา ก.พ.7",
+      requestType: "ปกติ",
+      purpose: "ใช้ประกอบการยื่นเลื่อนวิทยฐานะ",
+      specialReason: "",
+      submittedAt: "2026-07-01",
+      appointmentDate: "2026-07-10",
+      deliveryMethod: "รับเอง",
+      status: "จัดส่งเอกสารแล้ว",
+      applicantNote: "ขอไฟล์ PDF ชัดเจน",
+      officerNote: "จัดส่งไฟล์รับรองแล้ว",
+      assignedOfficerId: "u-officer",
+      approvedAt: "2026-07-03",
+      deliveredAt: "2026-07-04T10:30",
+      fileName: "GP7_Aree_2569.pdf",
+      certifiedStatus: true,
+      certifiedBy: "ธนกร ศรีสกล",
+      certifiedAt: "2026-07-04",
+      googleSyncStatus: "ส่งข้อมูลไป Google Sheet แล้ว",
+      googleSyncAt: "2026-07-04T10:30",
+      googleSheetId: GOOGLE_CONFIG.sheetId,
+      googleDriveFolderId: GOOGLE_CONFIG.driveFolderId
+    },
+    {
+      requestId: "r2",
+      requestCode: "HR-2569-0002",
+      personId: "p1",
+      documentType: "ขอสำเนา ก.ค.ศ.16",
+      requestType: "กรณีพิเศษ",
+      purpose: "ใช้ประกอบธุรกรรมเร่งด่วน",
+      specialReason: "ต้องใช้ประกอบเอกสารภายในสัปดาห์นี้",
+      submittedAt: "2026-07-06",
+      appointmentDate: "2026-07-08",
+      deliveryMethod: "รับเอง",
+      status: "อยู่ระหว่างดำเนินการ",
+      applicantNote: "",
+      officerNote: "กำลังตรวจสอบแฟ้มประวัติ",
+      assignedOfficerId: "u-officer",
+      approvedAt: "2026-07-06",
+      deliveredAt: "",
+      fileName: "",
+      certifiedStatus: false,
+      certifiedBy: "",
+      certifiedAt: "",
+      googleSyncStatus: "ส่งข้อมูลไป Google Sheet แล้ว",
+      googleSyncAt: "2026-07-06T09:00",
+      googleSheetId: GOOGLE_CONFIG.sheetId,
+      googleDriveFolderId: GOOGLE_CONFIG.driveFolderId
+    },
+    {
+      requestId: "r3",
+      requestCode: "HR-2569-0003",
+      personId: "p1",
+      documentType: "ขอทั้ง ก.พ.7 และ ก.ค.ศ.16",
+      requestType: "ปกติ",
+      purpose: "ใช้สมัครสอบคัดเลือก",
+      specialReason: "",
+      submittedAt: "2026-07-08",
+      appointmentDate: "2026-07-18",
+      deliveryMethod: "รับเอง",
+      status: "รอเจ้าหน้าที่ตรวจสอบ",
+      applicantNote: "หากเอกสารพร้อมแล้วแจ้งทางโทรศัพท์",
+      officerNote: "",
+      assignedOfficerId: "",
+      approvedAt: "",
+      deliveredAt: "",
+      fileName: "",
+      certifiedStatus: false,
+      certifiedBy: "",
+      certifiedAt: "",
+      googleSyncStatus: "รอส่งข้อมูล",
+      googleSyncAt: "",
+      googleSheetId: GOOGLE_CONFIG.sheetId,
+      googleDriveFolderId: GOOGLE_CONFIG.driveFolderId
+    }
+  ],
+  signatures: [
+    {
+      signatureId: "s1",
+      officerId: "u-officer",
+      officerName: "ธนกร ศรีสกล",
+      officerPosition: "นักทรัพยากรบุคคลชำนาญการ",
+      signatureImageUrl: "",
+      isDefault: true
+    }
+  ],
+  activityLogs: [
+    { logId: "l1", userId: "u-applicant", action: "submit_request", detail: "ยื่นคำขอ HR-2569-0003", createdAt: "2026-07-08T09:20" },
+    { logId: "l2", userId: "u-officer", action: "update_status", detail: "เปลี่ยนสถานะ HR-2569-0002 เป็นอยู่ระหว่างดำเนินการ", createdAt: "2026-07-08T11:10" }
+  ]
+};
+
+let state = migrateState(loadState());
+let session = { role: "applicant", user: null, view: "home", selectedRequestId: state.requests[0]?.requestId || "" };
+
+const loginScreen = document.querySelector("#loginScreen");
+const appShell = document.querySelector("#appShell");
+const content = document.querySelector("#content");
+const noticeArea = document.querySelector("#noticeArea");
+const mainNav = document.querySelector("#mainNav");
+const pageTitle = document.querySelector("#pageTitle");
+const roleLabel = document.querySelector("#roleLabel");
+const userBadge = document.querySelector("#userBadge");
+const sidebar = document.querySelector(".sidebar");
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelector("#loginLogo").src = LOGO_URL;
+  wireLogin();
+  wireGlobalActions();
+});
+
+function loadState() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return structuredClone(defaultState);
+  try {
+    const parsed = JSON.parse(saved);
+    return { ...structuredClone(defaultState), ...parsed };
+  } catch {
+    return structuredClone(defaultState);
+  }
+}
+
+function migrateState(data) {
+  data.personnel = data.personnel || [];
+  data.users = data.users || [];
+  data.personnel.forEach((person) => {
+    person.birthDate = normalizeStoredDate(person.birthDate);
+    if (person.nationalId === "1479912341234") person.birthDate = "1977-11-07";
+    person.positionNumber = person.positionNumber || "-";
+    person.directPaymentNumber = person.directPaymentNumber || "-";
+  });
+  (data.requests || []).forEach((request) => {
+    if (["รับด้วยตนเอง", "รับทางอีเมล", "ดาวน์โหลดผ่านระบบ"].includes(request.deliveryMethod)) {
+      request.deliveryMethod = "รับเอง";
+    }
+    request.googleSyncStatus = request.googleSyncStatus || "รอส่งข้อมูล";
+    request.googleSyncAt = request.googleSyncAt || "";
+    request.googleSheetId = request.googleSheetId || GOOGLE_CONFIG.sheetId;
+    request.googleDriveFolderId = request.googleDriveFolderId || GOOGLE_CONFIG.driveFolderId;
+  });
+  const applicantUser = data.users.find((item) => item.role === "applicant" && item.personId === "p1");
+  if (applicantUser) {
+    applicantUser.username = "1479912341234";
+    applicantUser.password = "07/11/2520";
+  }
+  return data;
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function isApplicantLogin(user, username, password) {
+  const person = getPerson(user.personId);
+  if (!person) return false;
+  return person.nationalId === username && normalizePasswordDate(password) === formatBirthPassword(person.birthDate);
+}
+
+function wireLogin() {
+  const roleButtons = document.querySelectorAll("[data-login-role]");
+  roleButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      roleButtons.forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      session.role = button.dataset.loginRole;
+      fillDemoCredentials(session.role);
+    });
+  });
+  fillDemoCredentials(session.role);
+
+  document.querySelector("#loginForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const username = document.querySelector("#username").value.trim();
+    const password = document.querySelector("#password").value.trim();
+    const user = state.users.find((item) => {
+      if (item.role !== session.role) return false;
+      if (item.role === "applicant") return isApplicantLogin(item, username, password);
+      return item.username === username && item.password === password;
+    });
+    if (!user) {
+      showLoginMessage("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง", "danger");
+      return;
+    }
+    session.user = user;
+    session.view = "home";
+    logAction("login", `เข้าสู่ระบบในสิทธิ์${roleMeta[user.role].label}`);
+    openApp();
+  });
+}
+
+function fillDemoCredentials(role) {
+  const user = demoUsers.find((item) => item.role === role);
+  document.querySelector("#username").value = user.username;
+  document.querySelector("#password").value = user.password;
+}
+
+function showLoginMessage(message, type) {
+  const existing = document.querySelector(".login-error");
+  if (existing) existing.remove();
+  const node = document.createElement("div");
+  node.className = `notice ${type} login-error`;
+  node.textContent = message;
+  document.querySelector(".login-form").appendChild(node);
+}
+
+function wireGlobalActions() {
+  document.querySelector("#logoutButton").addEventListener("click", () => {
+    logAction("logout", "ออกจากระบบ");
+    session.user = null;
+    appShell.classList.add("hidden");
+    loginScreen.classList.remove("hidden");
+  });
+
+  document.querySelector("#mobileMenuButton").addEventListener("click", () => {
+    sidebar.classList.toggle("open");
+  });
+
+  content.addEventListener("click", handleContentClick);
+  content.addEventListener("change", handleContentChange);
+  content.addEventListener("input", handleContentInput);
+}
+
+function openApp() {
+  loginScreen.classList.add("hidden");
+  appShell.classList.remove("hidden");
+  sidebar.classList.remove("open");
+  renderShell();
+  renderView();
+  showNotice("ยินดีต้อนรับเข้าสู่ระบบขอ ก.พ.7 / ก.ค.ศ.16 Online", "success");
+}
+
+function renderShell() {
+  const meta = roleMeta[session.user.role];
+  roleLabel.textContent = meta.label;
+  userBadge.textContent = getPerson(session.user.personId)?.fullName || session.user.username;
+  mainNav.innerHTML = meta.nav.map(([view, label]) => `
+    <button class="nav-button ${session.view === view ? "active" : ""}" type="button" data-nav="${view}">
+      ${label}
+    </button>
+  `).join("");
+  mainNav.querySelectorAll("[data-nav]").forEach((button) => {
+    button.addEventListener("click", () => {
+      session.view = button.dataset.nav;
+      sidebar.classList.remove("open");
+      renderShell();
+      renderView();
+    });
+  });
+}
+
+function renderView() {
+  const meta = roleMeta[session.user.role];
+  pageTitle.textContent = getPageTitle(meta, session.view);
+  if (session.user.role === "applicant") renderApplicantView();
+  if (session.user.role === "officer") renderOfficerView();
+  if (session.user.role === "admin") renderAdminView();
+}
+
+function getPageTitle(meta, view) {
+  const item = meta.nav.find(([key]) => key === view);
+  return item ? item[1] : meta.title;
+}
+
+function renderApplicantView() {
+  const person = getPerson(session.user.personId);
+  if (session.view === "new-request") return renderApplicantRequestForm(person);
+  if (session.view === "history") return renderApplicantHistory(person);
+  if (session.view === "downloads") return renderApplicantDownloads(person);
+  if (session.view === "profile") return renderApplicantProfile(person);
+  renderApplicantHome(person);
+}
+
+function renderApplicantHome(person) {
+  const requests = getRequestsForPerson(person.personId);
+  const latest = requests[0];
+  content.innerHTML = `
+    <div class="section-grid">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>ข้อมูลส่วนบุคคล</h3>
+            <p>ระบบแสดงเลขประจำตัวประชาชนแบบปกปิดเพื่อความปลอดภัย</p>
+          </div>
+          <button class="primary-action" type="button" data-go-view="new-request">ยื่นคำขอใหม่</button>
+        </div>
+        ${renderPersonDetails(person)}
+        ${latest ? renderSteps(latest.status) : ""}
+      </section>
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>คำขอล่าสุด</h3>
+            <p>${latest ? latest.requestCode : "ยังไม่มีคำขอ"}</p>
+          </div>
+        </div>
+        ${latest ? renderRequestSummary(latest) : `<p class="muted">เริ่มจากปุ่มยื่นคำขอใหม่เพื่อสร้างคำขอเอกสาร</p>`}
+      </section>
+    </div>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h3>ประวัติคำขอ</h3>
+          <p>ข้อมูลเดิมจะถูกนำมาใช้เมื่อยื่นคำขอครั้งถัดไป</p>
+        </div>
+      </div>
+      ${renderRequestsTable(requests, "applicant")}
+    </section>
+  `;
+}
+
+function renderPersonDetails(person) {
+  return `
+    <dl class="detail-list">
+      ${detail("ชื่อ-สกุล", `${person.prefix}${person.fullName}`)}
+      ${detail("ตำแหน่ง / วิทยฐานะ", `${person.position} ${person.academicRank}`)}
+      ${detail("สถานศึกษา / หน่วยงาน", person.schoolName)}
+      ${detail("เลขที่ตำแหน่ง", person.positionNumber)}
+      ${detail("เลขที่จ่ายตรง", person.directPaymentNumber)}
+      ${detail("เลขประจำตัวประชาชน", maskNationalId(person.nationalId))}
+      ${detail("วันเดือนปีเกิด", formatThaiDate(person.birthDate))}
+      ${detail("สถานะการปฏิบัติงาน", person.workStatus)}
+      ${detail("เบอร์โทรศัพท์", person.phone)}
+      ${detail("อีเมล", person.email)}
+    </dl>
+  `;
+}
+
+function renderApplicantRequestForm(person) {
+  const minNormalDate = toInputDate(addDays(new Date(), 7));
+  content.innerHTML = `
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h3>แบบฟอร์มขอเอกสาร</h3>
+          <p>ข้อมูลส่วนตัวถูกดึงจากฐานข้อมูลบุคลากร และแก้ไขได้เฉพาะข้อมูลติดต่อ</p>
+        </div>
+      </div>
+      ${renderPersonDetails(person)}
+    </section>
+    <section class="panel">
+      <form id="requestForm" class="form-grid">
+        <label>
+          ประเภทเอกสาร
+          <select name="documentType" required>
+            ${documentTypes.map((item) => `<option>${item}</option>`).join("")}
+          </select>
+        </label>
+        <label>
+          ประเภทการขอ
+          <select name="requestType" id="requestType" required>
+            <option>ปกติ</option>
+            <option>กรณีพิเศษ</option>
+          </select>
+        </label>
+        <label class="full">
+          วัตถุประสงค์ในการขอเอกสาร
+          <textarea name="purpose" placeholder="เช่น ใช้สมัครสอบ ใช้ยื่นเลื่อนวิทยฐานะ ใช้ประกอบการโอนย้าย" required></textarea>
+        </label>
+        <label>
+          วันที่ต้องการรับเอกสาร
+          <input name="appointmentDate" type="date" min="${minNormalDate}" required>
+        </label>
+        <label>
+          ช่องทางรับเอกสาร
+          <select name="deliveryMethod" required>
+            ${deliveryMethods.map((item) => `<option>${item}</option>`).join("")}
+          </select>
+        </label>
+        <div class="full pickup-note">
+          <strong>ข้อมูลการรับเอกสาร: รับเอง</strong>
+          <span>ระบบจะบันทึกคำขอไว้ในระบบ และส่งข้อมูลไปยัง Google Sheet พร้อมอ้างอิงโฟลเดอร์ Google Drive สำหรับจัดเก็บเอกสาร</span>
+        </div>
+        <label id="specialReasonWrap" class="full hidden">
+          เหตุผลความจำเป็นกรณีพิเศษ
+          <textarea name="specialReason" placeholder="ระบุเหตุผลความจำเป็นเพื่อให้เจ้าหน้าที่พิจารณา"></textarea>
+        </label>
+        <label>
+          เบอร์โทรศัพท์
+          <input name="phone" value="${escapeHtml(person.phone)}">
+        </label>
+        <label>
+          อีเมล
+          <input name="email" type="email" value="${escapeHtml(person.email)}">
+        </label>
+        <label class="full">
+          หมายเหตุเพิ่มเติม
+          <textarea name="applicantNote">${escapeHtml(person.note || "")}</textarea>
+        </label>
+        <label class="full checkbox-line">
+          <input name="confirm" type="checkbox" required>
+          ข้าพเจ้ายืนยันการขอเอกสารและยินยอมให้ใช้ข้อมูลเท่าที่จำเป็นตามวัตถุประสงค์
+        </label>
+        <div class="button-row full">
+          <button class="primary-action" type="submit">ส่งคำขอ</button>
+          <button class="secondary-action" type="button" data-go-view="home">ยกเลิก</button>
+        </div>
+      </form>
+    </section>
+  `;
+  document.querySelector("#requestForm").addEventListener("submit", submitApplicantRequest);
+}
+
+async function submitApplicantRequest(event) {
+  event.preventDefault();
+  const form = new FormData(event.target);
+  const requestType = form.get("requestType");
+  const appointmentDate = form.get("appointmentDate");
+  const specialReason = String(form.get("specialReason") || "").trim();
+  if (requestType === "ปกติ" && dateDiffDays(new Date(), new Date(`${appointmentDate}T00:00:00`)) < 7) {
+    showNotice("การขอเอกสารแบบปกติต้องยื่นล่วงหน้าอย่างน้อย 7 วัน กรุณาเลือกวันที่รับเอกสารใหม่ หรือเลือกประเภทการขอเป็นกรณีพิเศษพร้อมระบุเหตุผลความจำเป็น", "warning");
+    return;
+  }
+  if (requestType === "กรณีพิเศษ" && !specialReason) {
+    showNotice("กรณีพิเศษต้องระบุเหตุผลความจำเป็นเพื่อให้เจ้าหน้าที่พิจารณา", "warning");
+    return;
+  }
+
+  const person = getPerson(session.user.personId);
+  person.phone = String(form.get("phone") || "").trim();
+  person.email = String(form.get("email") || "").trim();
+  person.note = String(form.get("applicantNote") || "").trim();
+
+  const request = {
+    requestId: `r${Date.now()}`,
+    requestCode: nextRequestCode(),
+    personId: person.personId,
+    documentType: form.get("documentType"),
+    requestType,
+    purpose: String(form.get("purpose") || "").trim(),
+    specialReason,
+    submittedAt: toInputDate(new Date()),
+    appointmentDate,
+    deliveryMethod: form.get("deliveryMethod"),
+    status: "รอเจ้าหน้าที่ตรวจสอบ",
+    applicantNote: person.note,
+    officerNote: "",
+    assignedOfficerId: "",
+    approvedAt: "",
+    deliveredAt: "",
+    fileName: "",
+    certifiedStatus: false,
+    certifiedBy: "",
+    certifiedAt: "",
+    googleSyncStatus: "รอส่งข้อมูล",
+    googleSyncAt: "",
+    googleSheetId: GOOGLE_CONFIG.sheetId,
+    googleDriveFolderId: GOOGLE_CONFIG.driveFolderId
+  };
+
+  state.requests.unshift(request);
+  saveState();
+  logAction("submit_request", `ยื่นคำขอ ${request.requestCode}`);
+  const syncResult = await syncRequestToGoogle(request, person, "create_request");
+  request.googleSyncStatus = syncResult.ok ? "ส่งข้อมูลไป Google Sheet แล้ว" : "บันทึกในระบบแล้ว รอส่ง Google Sheet";
+  request.googleSyncAt = syncResult.ok ? new Date().toISOString() : "";
+  saveState();
+  session.view = "history";
+  renderShell();
+  renderView();
+  const syncText = syncResult.ok ? " และส่งข้อมูลไปยัง Google Sheet แล้ว" : " แต่ยังส่งข้อมูลไปยัง Google Sheet ไม่สำเร็จ ระบบบันทึกคำขอไว้ให้แล้ว";
+  showNotice(`ระบบได้รับคำขอของท่านเรียบร้อยแล้ว เลขคำขอ ${request.requestCode}${syncText}`, syncResult.ok ? "success" : "warning");
+}
+
+async function syncRequestToGoogle(request, person, action) {
+  const payload = buildGooglePayload(request, person, action);
+
+  if (window.google?.script?.run) {
+    return new Promise((resolve) => {
+      window.google.script.run
+        .withSuccessHandler((result) => resolve({ ok: Boolean(result?.ok), result }))
+        .withFailureHandler((error) => {
+          console.warn("Apps Script sync failed", error);
+          resolve({ ok: false });
+        })
+        .saveRequest(payload);
+    });
+  }
+
+  const form = new FormData();
+  Object.entries(payload).forEach(([key, value]) => {
+    form.append(key, value == null ? "" : String(value));
+  });
+  form.append("payload", JSON.stringify(payload));
+
+  try {
+    await fetch(GOOGLE_CONFIG.scriptUrl, {
+      method: "POST",
+      mode: "no-cors",
+      body: form
+    });
+    return { ok: true };
+  } catch (error) {
+    console.warn("Google sync failed", error);
+    return { ok: false };
+  }
+}
+
+function buildGooglePayload(request, person, action) {
+  return {
+    action,
+    source: "ระบบขอ ก.พ.7 / ก.ค.ศ.16 Online",
+    sheet_id: GOOGLE_CONFIG.sheetId,
+    drive_folder_id: GOOGLE_CONFIG.driveFolderId,
+    drive_folder_url: GOOGLE_CONFIG.driveFolderUrl,
+    request_id: request.requestId,
+    request_code: request.requestCode,
+    submitted_at: request.submittedAt,
+    appointment_date: request.appointmentDate,
+    delivery_method: "รับเอง",
+    status: request.status,
+    document_type: request.documentType,
+    request_type: request.requestType,
+    purpose: request.purpose,
+    special_reason: request.specialReason,
+    applicant_note: request.applicantNote,
+    officer_note: request.officerNote,
+    assigned_officer_id: request.assignedOfficerId,
+    approved_at: request.approvedAt,
+    delivered_at: request.deliveredAt,
+    file_name: request.fileName,
+    certified_status: request.certifiedStatus ? "รับรองแล้ว" : "ยังไม่รับรอง",
+    certified_by: request.certifiedBy,
+    certified_at: request.certifiedAt,
+    person_id: person.personId,
+    prefix: person.prefix,
+    full_name: person.fullName,
+    position: person.position,
+    academic_rank: person.academicRank,
+    school_name: person.schoolName,
+    position_number: person.positionNumber,
+    direct_payment_number: person.directPaymentNumber,
+    national_id: person.nationalId,
+    birth_date: formatBirthPassword(person.birthDate),
+    phone: person.phone,
+    email: person.email,
+    work_status: person.workStatus
+  };
+}
+
+function renderApplicantHistory(person) {
+  content.innerHTML = `
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h3>ประวัติการขอเอกสาร</h3>
+          <p>แสดงคำขอเฉพาะของ ${person.fullName}</p>
+        </div>
+        <button class="primary-action" type="button" data-go-view="new-request">ยื่นคำขอใหม่</button>
+      </div>
+      ${renderRequestsTable(getRequestsForPerson(person.personId), "applicant")}
+    </section>
+  `;
+}
+
+function renderApplicantDownloads(person) {
+  const delivered = getRequestsForPerson(person.personId).filter((item) => item.status === "จัดส่งเอกสารแล้ว");
+  content.innerHTML = `
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h3>ดาวน์โหลดเอกสาร</h3>
+          <p>ดาวน์โหลดได้เฉพาะไฟล์ที่เจ้าหน้าที่จัดส่งแล้ว</p>
+        </div>
+      </div>
+      <div class="activity-list">
+        ${delivered.length ? delivered.map((request) => `
+          <div class="download-item">
+            <strong>${request.requestCode} - ${request.documentType}</strong>
+            <span class="muted">จัดส่งเมื่อ ${formatThaiDateTime(request.deliveredAt)} | ${request.fileName || "PDF พร้อมดาวน์โหลด"}</span>
+            <div class="button-row">
+              <button class="primary-action" type="button" data-download="${request.requestId}">ดาวน์โหลด PDF</button>
+            </div>
+          </div>
+        `).join("") : `<p class="muted">ยังไม่มีเอกสารที่จัดส่งแล้ว</p>`}
+      </div>
+    </section>
+  `;
+}
+
+function renderApplicantProfile(person) {
+  content.innerHTML = `
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h3>ข้อมูลส่วนตัว</h3>
+          <p>แก้ไขได้เฉพาะช่องทางติดต่อและหมายเหตุเพิ่มเติม</p>
+        </div>
+      </div>
+      <form id="profileForm" class="form-grid">
+        <label>
+          ชื่อ-สกุล
+          <input value="${escapeHtml(person.prefix + person.fullName)}" disabled>
+        </label>
+        <label>
+          เลขประจำตัวประชาชน
+          <input value="${maskNationalId(person.nationalId)}" disabled>
+        </label>
+        <label>
+          เบอร์โทรศัพท์
+          <input name="phone" value="${escapeHtml(person.phone)}">
+        </label>
+        <label>
+          อีเมล
+          <input name="email" type="email" value="${escapeHtml(person.email)}">
+        </label>
+        <label class="full">
+          หมายเหตุเพิ่มเติม
+          <textarea name="note">${escapeHtml(person.note || "")}</textarea>
+        </label>
+        <div class="button-row full">
+          <button class="primary-action" type="submit">บันทึกข้อมูลติดต่อ</button>
+        </div>
+      </form>
+    </section>
+  `;
+  document.querySelector("#profileForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const form = new FormData(event.target);
+    person.phone = String(form.get("phone") || "").trim();
+    person.email = String(form.get("email") || "").trim();
+    person.note = String(form.get("note") || "").trim();
+    saveState();
+    logAction("update_profile", "ปรับปรุงข้อมูลติดต่อ");
+    showNotice("บันทึกข้อมูลติดต่อเรียบร้อยแล้ว", "success");
+  });
+}
+
+function renderOfficerView() {
+  if (session.view === "requests") return renderOfficerRequests();
+  if (session.view === "calendar") return renderOfficerCalendar();
+  if (session.view === "upload" || session.view === "certify") return renderOfficerRequests(session.view);
+  if (session.view === "delivery") return renderOfficerDelivery();
+  if (session.view === "reports") return renderOfficerReports();
+  renderOfficerHome();
+}
+
+function renderOfficerHome() {
+  content.innerHTML = `
+    ${renderOfficerStats()}
+    <div class="section-grid">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>คำขอล่าสุด</h3>
+            <p>ค้นหา ตรวจสอบ รับคำขอ อัปโหลด PDF และจัดส่งเอกสาร</p>
+          </div>
+          <button class="primary-action" type="button" data-go-view="requests">ดูรายการทั้งหมด</button>
+        </div>
+        ${renderRequestsTable(state.requests.slice(0, 6), "officer")}
+      </section>
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>ปฏิทินนัดหมาย</h3>
+            <p>รายการที่ต้องติดตามใกล้ที่สุด</p>
+          </div>
+        </div>
+        ${renderCalendarList()}
+      </section>
+    </div>
+  `;
+}
+
+function renderOfficerStats() {
+  const today = toInputDate(new Date());
+  const total = state.requests.length;
+  const todayCount = state.requests.filter((item) => item.submittedAt === today).length;
+  const normal = state.requests.filter((item) => item.requestType === "ปกติ").length;
+  const special = state.requests.filter((item) => item.requestType === "กรณีพิเศษ").length;
+  const waiting = state.requests.filter((item) => item.status === "รอเจ้าหน้าที่ตรวจสอบ").length;
+  const delivered = state.requests.filter((item) => item.status === "จัดส่งเอกสารแล้ว").length;
+  const appointmentsToday = state.requests.filter((item) => item.appointmentDate === today).length;
+  const processing = state.requests.filter((item) => item.status === "อยู่ระหว่างดำเนินการ").length;
+  return `
+    <div class="stat-grid">
+      ${statCard("คำขอทั้งหมด", total, "รวมทุกช่องทาง")}
+      ${statCard("คำขอวันนี้", todayCount, "ยื่นใหม่")}
+      ${statCard("แบบปกติ", normal, "ล่วงหน้า 7 วัน")}
+      ${statCard("กรณีพิเศษ", special, "ต้องมีเหตุผล")}
+      ${statCard("รอตรวจสอบ", waiting, "ควรดำเนินการก่อน")}
+      ${statCard("กำลังดำเนินการ", processing, "อยู่ในคิว")}
+      ${statCard("นัดหมายวันนี้", appointmentsToday, "ตรวจปฏิทิน")}
+      ${statCard("จัดส่งแล้ว", delivered, "ปิดงานแล้ว")}
+    </div>
+  `;
+}
+
+function renderOfficerRequests(focusMode = "") {
+  const selected = state.requests.find((item) => item.requestId === session.selectedRequestId) || state.requests[0];
+  session.selectedRequestId = selected?.requestId || "";
+  content.innerHTML = `
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h3>รายการคำขอ</h3>
+          <p>ค้นหา กรอง และเลือกคำขอเพื่อดำเนินการ</p>
+        </div>
+      </div>
+      ${renderFilters("officer")}
+      ${renderRequestsTable(getFilteredRequests(), "officer")}
+    </section>
+    ${selected ? renderRequestDetail(selected, focusMode) : ""}
+  `;
+}
+
+function renderFilters(context) {
+  return `
+    <div class="filters" data-filter-context="${context}">
+      <input id="requestSearch" placeholder="ค้นหาชื่อ เลขคำขอ โรงเรียน หรือเลขประชาชน">
+      <select id="statusFilter">
+        <option value="">ทุกสถานะ</option>
+        ${statuses.map((status) => `<option>${status}</option>`).join("")}
+      </select>
+      <select id="documentFilter">
+        <option value="">ทุกประเภทเอกสาร</option>
+        ${documentTypes.map((item) => `<option>${item}</option>`).join("")}
+      </select>
+      <select id="typeFilter">
+        <option value="">ทุกประเภทการขอ</option>
+        <option>ปกติ</option>
+        <option>กรณีพิเศษ</option>
+      </select>
+    </div>
+  `;
+}
+
+function getFilteredRequests() {
+  const search = document.querySelector("#requestSearch")?.value.trim().toLowerCase() || "";
+  const status = document.querySelector("#statusFilter")?.value || "";
+  const doc = document.querySelector("#documentFilter")?.value || "";
+  const type = document.querySelector("#typeFilter")?.value || "";
+  return state.requests.filter((request) => {
+    const person = getPerson(request.personId);
+    const text = `${request.requestCode} ${person.fullName} ${person.schoolName} ${person.nationalId}`.toLowerCase();
+    return (!search || text.includes(search)) &&
+      (!status || request.status === status) &&
+      (!doc || request.documentType === doc) &&
+      (!type || request.requestType === type);
+  });
+}
+
+function renderRequestDetail(request, focusMode = "") {
+  const person = getPerson(request.personId);
+  const signature = getDefaultSignature();
+  const focusHint = focusMode === "upload"
+    ? "เลือกไฟล์ PDF แล้วบันทึกชื่อไฟล์ในระบบต้นแบบ"
+    : focusMode === "certify"
+      ? "กรอกข้อมูลผู้รับรองแล้วกดรับรองสำเนาถูกต้อง"
+      : "บันทึกผลการดำเนินงานและเปลี่ยนสถานะคำขอ";
+
+  return `
+    <section class="panel request-detail">
+      <div class="panel-header">
+        <div>
+          <h3>รายละเอียดคำขอ ${request.requestCode}</h3>
+          <p>${focusHint}</p>
+        </div>
+        ${statusBadge(request.status)}
+      </div>
+      <div class="section-grid">
+        <div>
+          ${renderPersonDetails(person)}
+          ${renderSteps(request.status)}
+        </div>
+        <div>
+          ${renderRequestSummary(request)}
+        </div>
+      </div>
+      <form id="officerActionForm" class="form-grid" data-request-id="${request.requestId}">
+        <label>
+          สถานะคำขอ
+          <select name="status">
+            ${statuses.map((status) => `<option ${status === request.status ? "selected" : ""}>${status}</option>`).join("")}
+          </select>
+        </label>
+        <label>
+          วันนัดหมายรับเอกสาร
+          <input name="appointmentDate" type="date" value="${request.appointmentDate}">
+        </label>
+        <label>
+          อัปโหลด PDF
+          <input name="pdfFile" type="file" accept="application/pdf">
+        </label>
+        <label>
+          ชื่อไฟล์ปัจจุบัน
+          <input name="fileName" value="${escapeHtml(request.fileName || "")}" placeholder="เช่น GP7_ชื่อผู้ขอ_2569.pdf">
+        </label>
+        <label class="full">
+          หมายเหตุเจ้าหน้าที่
+          <textarea name="officerNote">${escapeHtml(request.officerNote || "")}</textarea>
+        </label>
+        <label>
+          ชื่อ-สกุลผู้รับรอง
+          <input name="certifiedBy" value="${escapeHtml(request.certifiedBy || signature.officerName)}">
+        </label>
+        <label>
+          ตำแหน่งผู้รับรอง
+          <input name="officerPosition" value="${escapeHtml(signature.officerPosition)}">
+        </label>
+        <label class="full">
+          ภาพลายมือชื่อเจ้าหน้าที่
+          <input name="signatureImage" type="file" accept="image/*">
+        </label>
+        <div class="full cert-box">
+          <strong>สำเนาถูกต้อง</strong>
+          <span class="signature-line">${request.certifiedBy ? "ลงชื่อ " + request.certifiedBy : "ลงชื่อ ........................................"}</span>
+          <span>(${request.certifiedBy || "ชื่อ-สกุลผู้รับรอง"})</span>
+          <span>ตำแหน่ง ${escapeHtml(signature.officerPosition)}</span>
+          <span>วันที่ ${request.certifiedAt ? formatThaiDate(request.certifiedAt) : ".........................................."}</span>
+        </div>
+        <div class="button-row full">
+          <button class="primary-action" type="submit">บันทึกการดำเนินงาน</button>
+          <button class="secondary-action" type="button" data-quick-status="รับคำขอแล้ว">รับคำขอ</button>
+          <button class="secondary-action" type="button" data-quick-status="ขอข้อมูลเพิ่มเติม">ขอข้อมูลเพิ่มเติม</button>
+          <button class="secondary-action" type="button" data-certify="${request.requestId}">รับรองสำเนาถูกต้อง</button>
+          <button class="primary-action" type="button" data-deliver="${request.requestId}">จัดส่งเอกสาร</button>
+        </div>
+      </form>
+    </section>
+  `;
+}
+
+function renderOfficerCalendar() {
+  content.innerHTML = `
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h3>ปฏิทินนัดหมาย</h3>
+          <p>เรียงตามวันที่ต้องการรับเอกสาร</p>
+        </div>
+      </div>
+      ${renderCalendarList(true)}
+    </section>
+  `;
+}
+
+function renderCalendarList(full = false) {
+  const items = [...state.requests]
+    .filter((item) => item.status !== "ยกเลิกคำขอ" && item.status !== "จัดส่งเอกสารแล้ว")
+    .sort((a, b) => a.appointmentDate.localeCompare(b.appointmentDate))
+    .slice(0, full ? 50 : 5);
+  if (!items.length) return `<p class="muted">ไม่มีนัดหมายค้างดำเนินการ</p>`;
+  return `
+    <div class="calendar-list">
+      ${items.map((request) => {
+        const person = getPerson(request.personId);
+        return `
+          <div class="calendar-item">
+            <strong>${formatThaiDate(request.appointmentDate)} | ${request.requestCode}</strong>
+            <span>${person.fullName} - ${request.documentType}</span>
+            <span class="muted">${request.deliveryMethod} | ${request.status}</span>
+            <div class="button-row">
+              <button class="secondary-action" type="button" data-select-request="${request.requestId}" data-go-view="requests">ดูรายละเอียด</button>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderOfficerDelivery() {
+  const delivered = state.requests.filter((item) => item.status === "จัดส่งเอกสารแล้ว");
+  content.innerHTML = `
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h3>ประวัติการจัดส่ง</h3>
+          <p>รายการที่จัดส่งเอกสาร PDF แล้ว</p>
+        </div>
+      </div>
+      ${renderRequestsTable(delivered, "officer")}
+    </section>
+  `;
+}
+
+function renderOfficerReports() {
+  content.innerHTML = `
+    <div class="section-grid">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>รายงานเบื้องต้น</h3>
+            <p>สรุปจำนวนคำขอแยกตามสถานะ</p>
+          </div>
+          <div class="button-row">
+            <button class="secondary-action" type="button" data-export="excel">ส่งออก Excel</button>
+            <button class="secondary-action" type="button" data-export="pdf">ส่งออก PDF</button>
+          </div>
+        </div>
+        ${renderStatusBars()}
+      </section>
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>งานที่ควรติดตาม</h3>
+            <p>คำขอที่ยังไม่จัดส่ง</p>
+          </div>
+        </div>
+        ${renderCalendarList()}
+      </section>
+    </div>
+  `;
+}
+
+function renderAdminView() {
+  if (session.view === "all-requests") return renderAdminRequests();
+  if (session.view === "personnel") return renderAdminPersonnel();
+  if (session.view === "users") return renderAdminUsers();
+  if (session.view === "reports") return renderAdminReports();
+  if (session.view === "settings") return renderAdminSettings();
+  if (session.view === "logs") return renderAdminLogs();
+  renderAdminHome();
+}
+
+function renderAdminHome() {
+  const schools = new Set(state.personnel.map((item) => item.schoolName)).size;
+  content.innerHTML = `
+    <div class="stat-grid">
+      ${statCard("คำขอทั้งหมด", state.requests.length, "ทั้งระบบ")}
+      ${statCard("บุคลากร", state.personnel.length, "นำเข้าได้จาก Excel")}
+      ${statCard("ผู้ใช้งาน", state.users.length, "ตามบทบาท")}
+      ${statCard("หน่วยงาน", schools, "โรงเรียน/หน่วยงาน")}
+    </div>
+    <div class="section-grid">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>ภาพรวมคำขอ</h3>
+            <p>สำหรับผู้บริหารและผู้ดูแลระบบ</p>
+          </div>
+        </div>
+        ${renderStatusBars()}
+      </section>
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>เมนูจัดการหลัก</h3>
+            <p>บริหารข้อมูลและรายงาน</p>
+          </div>
+        </div>
+        <div class="activity-list">
+          <button class="ghost-action" type="button" data-go-view="personnel">จัดการข้อมูลบุคลากร</button>
+          <button class="ghost-action" type="button" data-go-view="users">จัดการผู้ใช้งานและสิทธิ์</button>
+          <button class="ghost-action" type="button" data-go-view="reports">รายงานระบบ</button>
+          <button class="ghost-action" type="button" data-go-view="settings">ตั้งค่าระบบและฐานข้อมูล</button>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderAdminRequests() {
+  content.innerHTML = `
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h3>รายการคำขอทั้งหมด</h3>
+          <p>ค้นหา กรอง และส่งออกรายงานได้</p>
+        </div>
+        <div class="button-row">
+          <button class="secondary-action" type="button" data-export="excel">ส่งออก Excel</button>
+          <button class="secondary-action" type="button" data-export="pdf">ส่งออก PDF</button>
+        </div>
+      </div>
+      ${renderFilters("admin")}
+      ${renderRequestsTable(getFilteredRequests(), "admin")}
+    </section>
+  `;
+}
+
+function renderAdminPersonnel() {
+  content.innerHTML = `
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h3>จัดการข้อมูลบุคลากร</h3>
+          <p>เพิ่ม แก้ไข ลบ และนำเข้าจาก Excel หรือ CSV</p>
+        </div>
+        <div class="button-row">
+          <label class="secondary-action">
+            นำเข้า Excel/CSV
+            <input class="hidden" type="file" accept=".xlsx,.xls,.csv" data-import-personnel>
+          </label>
+        </div>
+      </div>
+      <form id="personnelForm" class="form-grid">
+        <input type="hidden" name="personId">
+        <label>
+          คำนำหน้า
+          <input name="prefix" placeholder="นาย / นาง / นางสาว">
+        </label>
+        <label>
+          ชื่อ-สกุล
+          <input name="fullName" required>
+        </label>
+        <label>
+          ตำแหน่ง
+          <input name="position" required>
+        </label>
+        <label>
+          วิทยฐานะ
+          <input name="academicRank">
+        </label>
+        <label>
+          สถานศึกษา / หน่วยงาน
+          <input name="schoolName" required>
+        </label>
+        <label>
+          เลขที่ตำแหน่ง
+          <input name="positionNumber" placeholder="เช่น สก 2145">
+        </label>
+        <label>
+          เลขที่จ่ายตรง
+          <input name="directPaymentNumber" placeholder="เช่น DP-108822">
+        </label>
+        <label>
+          เลขประจำตัวประชาชน 13 หลัก
+          <input name="nationalId" maxlength="13" required>
+        </label>
+        <label>
+          วันเดือนปีเกิด
+          <input name="birthDate" placeholder="เช่น 07/11/2520" required>
+        </label>
+        <label>
+          เบอร์โทรศัพท์
+          <input name="phone">
+        </label>
+        <label>
+          อีเมล
+          <input name="email" type="email">
+        </label>
+        <div class="button-row full">
+          <button class="primary-action" type="submit">บันทึกบุคลากร</button>
+          <button class="secondary-action" type="reset">ล้างฟอร์ม</button>
+        </div>
+      </form>
+    </section>
+    <section class="panel">
+      ${renderPersonnelTable()}
+    </section>
+  `;
+  document.querySelector("#personnelForm").addEventListener("submit", savePersonnel);
+}
+
+function renderPersonnelTable() {
+  return `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ชื่อ-สกุล</th>
+            <th>ตำแหน่ง</th>
+            <th>สถานศึกษา / หน่วยงาน</th>
+            <th>ข้อมูลตำแหน่ง</th>
+            <th>เลขประชาชน</th>
+            <th>วันเดือนปีเกิด</th>
+            <th>ติดต่อ</th>
+            <th>สถานะ</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${state.personnel.map((person) => `
+            <tr>
+              <td><strong>${person.prefix}${person.fullName}</strong></td>
+              <td>${person.position}<br><span class="muted">${person.academicRank}</span></td>
+              <td>${person.schoolName}</td>
+              <td>เลขที่ตำแหน่ง: ${person.positionNumber || "-"}<br><span class="muted">เลขที่จ่ายตรง: ${person.directPaymentNumber || "-"}</span></td>
+              <td>${maskNationalId(person.nationalId)}</td>
+              <td>${formatBirthPassword(person.birthDate)}</td>
+              <td>${person.phone}<br><span class="muted">${person.email}</span></td>
+              <td>${person.workStatus}</td>
+              <td>
+                <div class="button-row">
+                  <button class="secondary-action" type="button" data-edit-person="${person.personId}">แก้ไข</button>
+                  <button class="danger-action" type="button" data-delete-person="${person.personId}">ลบ</button>
+                </div>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function savePersonnel(event) {
+  event.preventDefault();
+  const form = new FormData(event.target);
+  const personId = form.get("personId") || `p${Date.now()}`;
+  const existing = state.personnel.find((item) => item.personId === personId);
+  const parsedBirthDate = parseBirthDateInput(form.get("birthDate"));
+  if (!parsedBirthDate) {
+    showNotice("กรุณากรอกวันเดือนปีเกิดรูปแบบ 07/11/2520", "warning");
+    return;
+  }
+  const payload = {
+    personId,
+    prefix: form.get("prefix") || "",
+    fullName: form.get("fullName") || "",
+    position: form.get("position") || "",
+    academicRank: form.get("academicRank") || "-",
+    schoolName: form.get("schoolName") || "",
+    positionNumber: form.get("positionNumber") || "-",
+    directPaymentNumber: form.get("directPaymentNumber") || "-",
+    nationalId: form.get("nationalId") || "",
+    birthDate: parsedBirthDate,
+    phone: form.get("phone") || "",
+    email: form.get("email") || "",
+    workStatus: existing?.workStatus || "ปฏิบัติงานอยู่",
+    note: existing?.note || ""
+  };
+  if (existing) Object.assign(existing, payload);
+  else state.personnel.push(payload);
+  saveState();
+  logAction("save_personnel", `บันทึกข้อมูลบุคลากร ${payload.fullName}`);
+  renderAdminPersonnel();
+  showNotice("บันทึกข้อมูลบุคลากรเรียบร้อยแล้ว", "success");
+}
+
+function renderAdminUsers() {
+  const permissions = ["ดูข้อมูล", "แก้ไขข้อมูล", "อัปโหลดเอกสาร", "รับรองสำเนาถูกต้อง", "จัดส่งเอกสาร", "ลบข้อมูล", "ส่งออกรายงาน"];
+  content.innerHTML = `
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h3>จัดการผู้ใช้งาน</h3>
+          <p>กำหนดบทบาทและสิทธิ์การใช้งานตามความจำเป็น</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ผู้ใช้งาน</th>
+              <th>บทบาท</th>
+              <th>สถานะ</th>
+              <th>สิทธิ์ตัวอย่าง</th>
+              <th>ความปลอดภัย</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${state.users.map((user) => {
+              const person = getPerson(user.personId) || { fullName: user.username };
+              const userPermissions = user.role === "applicant" ? permissions.slice(0, 1) : user.role === "officer" ? permissions.slice(0, 5) : permissions;
+              return `
+                <tr>
+                  <td><strong>${person.fullName}</strong><br><span class="muted">${user.username}</span></td>
+                  <td>${roleMeta[user.role].label}</td>
+                  <td>${user.status === "active" ? "เปิดใช้งาน" : "ปิดใช้งาน"}</td>
+                  <td><div class="permission-list">${userPermissions.map((item) => `<span>${item}</span>`).join("")}</div></td>
+                  <td>รหัสผ่านควรจัดเก็บแบบ Hash ในระบบจริง</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
+function renderAdminReports() {
+  content.innerHTML = `
+    <div class="section-grid">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>รายงานระบบ</h3>
+            <p>รายวัน รายเดือน แยกตามสถานศึกษา ประเภทเอกสาร และสถานะ</p>
+          </div>
+          <div class="button-row">
+            <button class="secondary-action" type="button" data-export="excel">ส่งออก Excel</button>
+            <button class="secondary-action" type="button" data-export="pdf">ส่งออก PDF</button>
+          </div>
+        </div>
+        ${renderStatusBars()}
+      </section>
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>รายงานแยกตามสถานศึกษา</h3>
+            <p>จำนวนคำขอตามหน่วยงาน</p>
+          </div>
+        </div>
+        ${renderSchoolBars()}
+      </section>
+    </div>
+  `;
+}
+
+function renderAdminSettings() {
+  const schemas = {
+    users: ["user_id", "username", "password_hash", "role", "person_id", "status", "created_at", "updated_at", "last_login"],
+    personnel: ["person_id", "prefix", "full_name", "position", "academic_rank", "school_name", "position_number", "direct_payment_number", "national_id", "birth_date", "phone", "email", "work_status"],
+    requests: ["request_id", "request_code", "person_id", "document_type", "request_type", "purpose", "appointment_date", "delivery_method", "status", "officer_note", "delivered_at"],
+    request_files: ["file_id", "request_id", "file_name", "file_url", "file_type", "uploaded_by", "certified_status", "certified_by", "certified_at"],
+    officer_signatures: ["signature_id", "officer_id", "officer_name", "officer_position", "signature_image_url", "is_default"],
+    activity_logs: ["log_id", "user_id", "action", "detail", "ip_address", "created_at"]
+  };
+  content.innerHTML = `
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h3>ตั้งค่าระบบและโครงสร้างฐานข้อมูล</h3>
+          <p>ต้นแบบนี้แสดงโครงสร้างที่ควรใช้เมื่อนำไปพัฒนาระบบจริง</p>
+        </div>
+      </div>
+      <div class="schema-grid">
+        ${Object.entries(schemas).map(([name, fields]) => `
+          <div class="schema-block">
+            <h4>${name}</h4>
+            <code>${fields.join("\n")}</code>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h3>เงื่อนไขสำคัญ</h3>
+          <p>กฎธุรกิจและความปลอดภัยที่ระบบต้องบังคับใช้</p>
+        </div>
+      </div>
+      <ul>
+        <li>ขอแบบปกติต้องเลือกวันรับเอกสารล่วงหน้าอย่างน้อย 7 วัน</li>
+        <li>ขอกรณีพิเศษต้องกรอกเหตุผลความจำเป็น</li>
+        <li>ผู้ขอดูได้เฉพาะคำขอของตนเอง ส่วนเจ้าหน้าที่และผู้ดูแลเห็นตามสิทธิ์</li>
+        <li>ไม่แสดงเลขประจำตัวประชาชนเต็มรูปแบบในหน้าทั่วไป</li>
+        <li>ระบบจริงควร Hash รหัสผ่าน บันทึก Log และจำกัดการเข้าถึงไฟล์ PDF ตามบทบาท</li>
+      </ul>
+    </section>
+  `;
+}
+
+function renderAdminLogs() {
+  content.innerHTML = `
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h3>ประวัติการใช้งาน</h3>
+          <p>บันทึกกิจกรรมสำคัญของระบบ</p>
+        </div>
+      </div>
+      <div class="activity-list">
+        ${state.activityLogs.slice().reverse().map((log) => {
+          const user = state.users.find((item) => item.userId === log.userId);
+          const person = user ? getPerson(user.personId) : null;
+          return `
+            <div class="activity-item">
+              <strong>${log.action}</strong>
+              <span>${log.detail}</span>
+              <span class="muted">${person?.fullName || "ระบบ"} | ${formatThaiDateTime(log.createdAt)}</span>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderRequestsTable(requests, context) {
+  if (!requests.length) return `<p class="muted">ไม่พบรายการคำขอ</p>`;
+  return `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>เลขคำขอ</th>
+            <th>ผู้ขอ</th>
+            <th>ประเภทเอกสาร</th>
+            <th>ประเภทการขอ</th>
+            <th>วันที่ยื่น / นัดหมาย</th>
+            <th>สถานะ</th>
+            <th>ไฟล์ PDF</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${requests.map((request) => {
+            const person = getPerson(request.personId);
+            return `
+              <tr>
+                <td><strong>${request.requestCode}</strong></td>
+                <td>${person.fullName}<br><span class="muted">${person.schoolName}<br>${maskNationalId(person.nationalId)}</span></td>
+                <td>${request.documentType}</td>
+                <td>${request.requestType}</td>
+                <td>${formatThaiDate(request.submittedAt)}<br><span class="muted">${formatThaiDate(request.appointmentDate)}</span></td>
+                <td>${statusBadge(request.status)}</td>
+                <td>${request.fileName ? `${request.fileName}<br><span class="muted">${request.certifiedStatus ? "รับรองแล้ว" : "ยังไม่รับรอง"}</span>` : "-"}</td>
+                <td>
+                  <div class="button-row">
+                    ${context === "applicant" && request.status === "จัดส่งเอกสารแล้ว" ? `<button class="secondary-action" type="button" data-download="${request.requestId}">ดาวน์โหลด</button>` : ""}
+                    ${context === "officer" ? `<button class="secondary-action" type="button" data-select-request="${request.requestId}" data-go-view="requests">ดูรายละเอียด</button>` : ""}
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderRequestSummary(request) {
+  return `
+    <dl class="detail-list">
+      ${detail("เลขคำขอ", request.requestCode)}
+      ${detail("ประเภทเอกสาร", request.documentType)}
+      ${detail("ประเภทการขอ", request.requestType)}
+      ${detail("วัตถุประสงค์", request.purpose)}
+      ${detail("เหตุผลกรณีพิเศษ", request.specialReason || "-")}
+      ${detail("วันที่ยื่นคำขอ", formatThaiDate(request.submittedAt))}
+      ${detail("วันที่ต้องการรับ", formatThaiDate(request.appointmentDate))}
+      ${detail("ช่องทางรับเอกสาร", request.deliveryMethod)}
+      ${detail("หมายเหตุผู้ขอ", request.applicantNote || "-")}
+      ${detail("หมายเหตุเจ้าหน้าที่", request.officerNote || "-")}
+      ${detail("ไฟล์ PDF", request.fileName || "-")}
+      ${detail("สถานะ Google Sheet", request.googleSyncStatus || "-")}
+      ${detail("Google Drive Folder", request.googleDriveFolderId || GOOGLE_CONFIG.driveFolderId)}
+      ${detail("จัดส่งเมื่อ", request.deliveredAt ? formatThaiDateTime(request.deliveredAt) : "-")}
+    </dl>
+  `;
+}
+
+function renderSteps(status) {
+  const stepMap = [
+    ["ยื่นคำขอ", ["รอเจ้าหน้าที่ตรวจสอบ", "รับคำขอแล้ว", "อยู่ระหว่างดำเนินการ", "นัดหมายรับเอกสารแล้ว", "จัดส่งเอกสารแล้ว", "ขอข้อมูลเพิ่มเติม"]],
+    ["ตรวจสอบ", ["รับคำขอแล้ว", "อยู่ระหว่างดำเนินการ", "นัดหมายรับเอกสารแล้ว", "จัดส่งเอกสารแล้ว", "ขอข้อมูลเพิ่มเติม"]],
+    ["ดำเนินการ", ["อยู่ระหว่างดำเนินการ", "นัดหมายรับเอกสารแล้ว", "จัดส่งเอกสารแล้ว"]],
+    ["จัดส่งแล้ว", ["จัดส่งเอกสารแล้ว"]]
+  ];
+  return `
+    <div class="steps" aria-label="สถานะคำขอ">
+      ${stepMap.map(([label, activeStatuses]) => `<div class="step ${activeStatuses.includes(status) ? "active" : ""}">${label}</div>`).join("")}
+    </div>
+  `;
+}
+
+function handleContentClick(event) {
+  const goView = event.target.closest("[data-go-view]");
+  if (goView) {
+    const select = event.target.closest("[data-select-request]");
+    if (select) session.selectedRequestId = select.dataset.selectRequest;
+    session.view = goView.dataset.goView;
+    renderShell();
+    renderView();
+    return;
+  }
+
+  const selectRequest = event.target.closest("[data-select-request]");
+  if (selectRequest) {
+    session.selectedRequestId = selectRequest.dataset.selectRequest;
+    renderView();
+    return;
+  }
+
+  const quickStatus = event.target.closest("[data-quick-status]");
+  if (quickStatus) {
+    const form = document.querySelector("#officerActionForm");
+    const request = state.requests.find((item) => item.requestId === form.dataset.requestId);
+    request.status = quickStatus.dataset.quickStatus;
+    if (request.status === "รับคำขอแล้ว") request.approvedAt = toInputDate(new Date());
+    request.assignedOfficerId = session.user.userId;
+    saveState();
+    logAction("update_status", `เปลี่ยนสถานะ ${request.requestCode} เป็น${request.status}`);
+    renderView();
+    showNotice("อัปเดตสถานะคำขอเรียบร้อยแล้ว", "success");
+    return;
+  }
+
+  const certify = event.target.closest("[data-certify]");
+  if (certify) {
+    certifyRequest(certify.dataset.certify);
+    return;
+  }
+
+  const deliver = event.target.closest("[data-deliver]");
+  if (deliver) {
+    deliverRequest(deliver.dataset.deliver);
+    return;
+  }
+
+  const download = event.target.closest("[data-download]");
+  if (download) {
+    const request = state.requests.find((item) => item.requestId === download.dataset.download);
+    showNotice(`ต้นแบบพร้อมดาวน์โหลดไฟล์ ${request.fileName || "PDF"} ของคำขอ ${request.requestCode} แล้ว`, "success");
+    return;
+  }
+
+  const exportButton = event.target.closest("[data-export]");
+  if (exportButton) {
+    showNotice(`ต้นแบบจำลองการส่งออกรายงานเป็น ${exportButton.dataset.export.toUpperCase()} เรียบร้อยแล้ว`, "success");
+    return;
+  }
+
+  const editPerson = event.target.closest("[data-edit-person]");
+  if (editPerson) {
+    fillPersonnelForm(editPerson.dataset.editPerson);
+    return;
+  }
+
+  const deletePerson = event.target.closest("[data-delete-person]");
+  if (deletePerson) {
+    const person = getPerson(deletePerson.dataset.deletePerson);
+    if (person && person.personId !== session.user.personId) {
+      state.personnel = state.personnel.filter((item) => item.personId !== person.personId);
+      saveState();
+      logAction("delete_personnel", `ลบข้อมูลบุคลากร ${person.fullName}`);
+      renderAdminPersonnel();
+      showNotice("ลบข้อมูลบุคลากรเรียบร้อยแล้ว", "success");
+    } else {
+      showNotice("ไม่สามารถลบบัญชีที่กำลังใช้งานอยู่ในต้นแบบนี้", "warning");
+    }
+  }
+}
+
+function handleContentChange(event) {
+  if (event.target.id === "requestType") {
+    const isSpecial = event.target.value === "กรณีพิเศษ";
+    const wrap = document.querySelector("#specialReasonWrap");
+    wrap.classList.toggle("hidden", !isSpecial);
+    const dateInput = document.querySelector("[name='appointmentDate']");
+    dateInput.min = isSpecial ? toInputDate(new Date()) : toInputDate(addDays(new Date(), 7));
+    return;
+  }
+
+  if (["requestSearch", "statusFilter", "documentFilter", "typeFilter"].includes(event.target.id)) {
+    refreshFilteredTable();
+    return;
+  }
+
+  if (event.target.name === "pdfFile" && event.target.files?.length) {
+    const fileNameInput = document.querySelector("[name='fileName']");
+    fileNameInput.value = event.target.files[0].name;
+    return;
+  }
+
+  if (event.target.matches("[data-import-personnel]")) {
+    showNotice("ต้นแบบรับไฟล์นำเข้าแล้ว ในระบบจริงจะอ่าน Excel/CSV และตรวจสอบข้อมูลก่อนบันทึก", "success");
+  }
+}
+
+function handleContentInput(event) {
+  if (["requestSearch", "statusFilter", "documentFilter", "typeFilter"].includes(event.target.id)) {
+    refreshFilteredTable();
+  }
+}
+
+function refreshFilteredTable() {
+  const activeContext = document.querySelector("[data-filter-context]")?.dataset.filterContext || "officer";
+  const tablePanel = document.querySelector("[data-filter-context]")?.closest(".panel");
+  const oldTable = tablePanel?.querySelector(".table-wrap, .muted");
+  if (!oldTable) return;
+  const replacement = document.createElement("div");
+  replacement.innerHTML = renderRequestsTable(getFilteredRequests(), activeContext);
+  oldTable.replaceWith(replacement.firstElementChild || replacement);
+}
+
+content.addEventListener("submit", async (event) => {
+  if (event.target.id !== "officerActionForm") return;
+  event.preventDefault();
+  const request = state.requests.find((item) => item.requestId === event.target.dataset.requestId);
+  const form = new FormData(event.target);
+  request.status = form.get("status");
+  request.appointmentDate = form.get("appointmentDate");
+  request.fileName = String(form.get("fileName") || "").trim();
+  request.officerNote = String(form.get("officerNote") || "").trim();
+  request.assignedOfficerId = session.user.userId;
+  if (request.status === "รับคำขอแล้ว" && !request.approvedAt) request.approvedAt = toInputDate(new Date());
+  if (request.status === "จัดส่งเอกสารแล้ว" && !request.deliveredAt) request.deliveredAt = new Date().toISOString();
+  saveState();
+  logAction("update_request", `บันทึกการดำเนินงาน ${request.requestCode}`);
+  const person = getPerson(request.personId);
+  const syncResult = await syncRequestToGoogle(request, person, "update_request");
+  request.googleSyncStatus = syncResult.ok ? "ส่งข้อมูลไป Google Sheet แล้ว" : "บันทึกในระบบแล้ว รอส่ง Google Sheet";
+  request.googleSyncAt = syncResult.ok ? new Date().toISOString() : request.googleSyncAt;
+  saveState();
+  renderView();
+  showNotice(syncResult.ok ? "บันทึกการดำเนินงานและส่งข้อมูลไป Google Sheet เรียบร้อยแล้ว" : "บันทึกการดำเนินงานแล้ว แต่ยังส่งข้อมูลไป Google Sheet ไม่สำเร็จ", syncResult.ok ? "success" : "warning");
+});
+
+function certifyRequest(requestId) {
+  const request = state.requests.find((item) => item.requestId === requestId);
+  const form = document.querySelector("#officerActionForm");
+  const data = new FormData(form);
+  request.fileName = String(data.get("fileName") || request.fileName || `${request.requestCode}.pdf`).trim();
+  request.certifiedStatus = true;
+  request.certifiedBy = String(data.get("certifiedBy") || getDefaultSignature().officerName).trim();
+  request.certifiedAt = toInputDate(new Date());
+  request.officerNote = String(data.get("officerNote") || request.officerNote || "รับรองสำเนาถูกต้องแล้ว").trim();
+  request.assignedOfficerId = session.user.userId;
+  saveState();
+  logAction("certify_pdf", `รับรองสำเนาถูกต้อง ${request.requestCode}`);
+  renderView();
+  showNotice("รับรองสำเนาถูกต้องบน PDF เรียบร้อยแล้ว", "success");
+}
+
+async function deliverRequest(requestId) {
+  const request = state.requests.find((item) => item.requestId === requestId);
+  if (!request.fileName) {
+    showNotice("กรุณาระบุหรืออัปโหลดชื่อไฟล์ PDF ก่อนจัดส่งเอกสาร", "warning");
+    return;
+  }
+  request.status = "จัดส่งเอกสารแล้ว";
+  request.deliveredAt = new Date().toISOString();
+  request.assignedOfficerId = session.user.userId;
+  if (!request.certifiedStatus) {
+    request.certifiedStatus = true;
+    request.certifiedBy = getDefaultSignature().officerName;
+    request.certifiedAt = toInputDate(new Date());
+  }
+  saveState();
+  logAction("deliver_pdf", `จัดส่งเอกสาร ${request.requestCode}`);
+  const person = getPerson(request.personId);
+  const syncResult = await syncRequestToGoogle(request, person, "deliver_request");
+  request.googleSyncStatus = syncResult.ok ? "ส่งข้อมูลไป Google Sheet แล้ว" : "บันทึกในระบบแล้ว รอส่ง Google Sheet";
+  request.googleSyncAt = syncResult.ok ? new Date().toISOString() : request.googleSyncAt;
+  saveState();
+  renderView();
+  showNotice(syncResult.ok ? "จัดส่งเอกสารและส่งข้อมูลไป Google Sheet เรียบร้อยแล้ว" : "จัดส่งเอกสารแล้ว แต่ยังส่งข้อมูลไป Google Sheet ไม่สำเร็จ", syncResult.ok ? "success" : "warning");
+}
+
+function fillPersonnelForm(personId) {
+  const person = getPerson(personId);
+  const form = document.querySelector("#personnelForm");
+  if (!person || !form) return;
+  Object.entries(person).forEach(([key, value]) => {
+    if (form.elements[key]) form.elements[key].value = value;
+  });
+  if (form.elements.birthDate) form.elements.birthDate.value = formatBirthPassword(person.birthDate);
+  form.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderStatusBars() {
+  const total = Math.max(state.requests.length, 1);
+  return `
+    <div class="report-bars">
+      ${statuses.map((status) => {
+        const count = state.requests.filter((item) => item.status === status).length;
+        const width = Math.round((count / total) * 100);
+        return `
+          <div class="report-bar">
+            <strong>${status}</strong>
+            <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
+            <span>${count}</span>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderSchoolBars() {
+  const grouped = state.requests.reduce((acc, request) => {
+    const school = getPerson(request.personId).schoolName;
+    acc[school] = (acc[school] || 0) + 1;
+    return acc;
+  }, {});
+  const max = Math.max(...Object.values(grouped), 1);
+  return `
+    <div class="report-bars">
+      ${Object.entries(grouped).map(([school, count]) => `
+        <div class="report-bar">
+          <strong>${school}</strong>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round((count / max) * 100)}%"></div></div>
+          <span>${count}</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function statCard(label, value, note) {
+  return `
+    <div class="stat-card">
+      <span>${label}</span>
+      <strong>${value}</strong>
+      <small>${note}</small>
+    </div>
+  `;
+}
+
+function detail(label, value) {
+  return `<div><dt>${label}</dt><dd>${escapeHtml(String(value || "-"))}</dd></div>`;
+}
+
+function statusBadge(status) {
+  const className = status === "จัดส่งเอกสารแล้ว" ? "done" : status === "ยกเลิกคำขอ" ? "cancelled" : status === "รอเจ้าหน้าที่ตรวจสอบ" ? "waiting" : "";
+  return `<span class="status-badge ${className}">${status}</span>`;
+}
+
+function getPerson(personId) {
+  return state.personnel.find((item) => item.personId === personId);
+}
+
+function getRequestsForPerson(personId) {
+  return state.requests.filter((request) => request.personId === personId);
+}
+
+function getDefaultSignature() {
+  return state.signatures.find((item) => item.isDefault) || state.signatures[0] || {
+    officerName: "เจ้าหน้าที่กลุ่มบริหารงานบุคคล",
+    officerPosition: "เจ้าหน้าที่ผู้รับรอง"
+  };
+}
+
+function nextRequestCode() {
+  const buddhistYear = new Date().getFullYear() + 543;
+  const code = `HR-${buddhistYear}-${String(state.serial).padStart(4, "0")}`;
+  state.serial += 1;
+  return code;
+}
+
+function maskNationalId(value) {
+  if (!value || value.length < 8) return "-";
+  return `${value.slice(0, 5)}xxxx${value.slice(-4)}`;
+}
+
+function formatThaiDate(value) {
+  if (!value) return "-";
+  const normalized = normalizeStoredDate(value);
+  const date = new Date(`${normalized}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("th-TH", { year: "numeric", month: "short", day: "numeric" }).format(date);
+}
+
+function formatBirthPassword(value) {
+  const normalized = normalizeStoredDate(value);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized || "");
+  if (!match) return value || "-";
+  const year = Number(match[1]) + 543;
+  return `${match[3]}/${match[2]}/${year}`;
+}
+
+function normalizePasswordDate(value) {
+  const parsed = parseBirthDateInput(value);
+  return parsed ? formatBirthPassword(parsed) : String(value || "").trim();
+}
+
+function parseBirthDateInput(value) {
+  const text = String(value || "").trim();
+  let match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(text);
+  if (match) {
+    const day = Number(match[1]);
+    const month = Number(match[2]);
+    const year = Number(match[3]) > 2400 ? Number(match[3]) - 543 : Number(match[3]);
+    return validDateParts(year, month, day) ? `${year}-${pad2(month)}-${pad2(day)}` : "";
+  }
+  match = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(text);
+  if (match) {
+    const year = Number(match[1]) > 2400 ? Number(match[1]) - 543 : Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    return validDateParts(year, month, day) ? `${year}-${pad2(month)}-${pad2(day)}` : "";
+  }
+  return "";
+}
+
+function normalizeStoredDate(value) {
+  return parseBirthDateInput(value) || String(value || "");
+}
+
+function validDateParts(year, month, day) {
+  const date = new Date(year, month - 1, day);
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+}
+
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function formatThaiDateTime(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("th-TH", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(date);
+}
+
+function addDays(date, days) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+function toInputDate(date) {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+}
+
+function dateDiffDays(a, b) {
+  const start = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  const end = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((end - start) / 86400000);
+}
+
+function showNotice(message, type = "success") {
+  noticeArea.innerHTML = `<div class="notice ${type}">${message}</div>`;
+  window.clearTimeout(showNotice.timer);
+  showNotice.timer = window.setTimeout(() => {
+    noticeArea.innerHTML = "";
+  }, 5200);
+}
+
+function logAction(action, detail) {
+  if (!session.user) return;
+  state.activityLogs.push({
+    logId: `l${Date.now()}`,
+    userId: session.user.userId,
+    action,
+    detail,
+    createdAt: new Date().toISOString()
+  });
+  saveState();
+}
+
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+</script>
